@@ -1,0 +1,7 @@
+.next
+node_modules
+.vercel
+.env
+.env.local
+drizzle/meta
+npm-debug.log*

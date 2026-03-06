@@ -1,0 +1,20 @@
+.card {
+  padding: 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
