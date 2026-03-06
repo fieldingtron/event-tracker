@@ -70,6 +70,41 @@ curl -X POST http://localhost:3000/api/events \
 3. Use the deployed site for both the admin dashboard and your production ingestion endpoint.
 4. Keep local development pointed at the same Supabase project unless you later decide to split environments.
 
+The repo includes a minimal [`vercel.json`](/Users/fieldsmarshall/code/event-tracker/vercel.json) so Vercel treats the project as a standard Next.js deployment.
+
+## Deployment checklist
+
+### In Supabase
+
+1. Create the project.
+2. Run `drizzle/0000_handy_mauler.sql`.
+3. Enable Email auth with password sign-in.
+4. Create the single admin user in the Supabase Auth dashboard.
+5. Set the Auth Site URL to your production domain.
+6. Add Redirect URLs for:
+   - your production app URL
+   - `http://localhost:3000`
+7. Confirm Realtime is enabled for the `events` table.
+
+### In Vercel
+
+1. Import this GitHub repo into Vercel.
+2. Set these environment variables for Production:
+   - `DATABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Trigger the first deployment.
+4. If you add a custom domain, update the Supabase Auth Site URL and Redirect URLs to match it.
+
+### After deploy
+
+1. Open the production `/login` page and sign in with the admin account.
+2. Create a project and save the generated API key.
+3. Send a test event to `https://your-domain/api/events`.
+4. Verify the event appears in the dashboard feed and updates the chart.
+5. Verify an invalid API key returns `401`.
+6. Verify signing out blocks access to `/dashboard`.
+
 ## Access model
 
 - The dashboard login page is public, but only the single admin Supabase account can access the dashboard.
