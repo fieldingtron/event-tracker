@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildApiErrorResponse } from "@/lib/api-errors";
 import {
   createProject,
   getProjectByName,
@@ -25,11 +26,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const settingsRecord = await getSettings();
-  if (!settingsRecord || settingsRecord.keyValue !== apiKey) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
   const json = await request.json().catch(() => null);
   const parsed = eventIngestSchema.safeParse(json);
 
@@ -41,6 +37,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    const settingsRecord = await getSettings();
+    if (!settingsRecord || settingsRecord.keyValue !== apiKey) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
     let project = await getProjectByName(parsed.data.project);
     if (!project) {
       project = await createProject(parsed.data.project);
@@ -65,6 +66,6 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Unable to record the event." }, { status: 500 });
+    return buildApiErrorResponse(error, "Unable to record the event.");
   }
 }

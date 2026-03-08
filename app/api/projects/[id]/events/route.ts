@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildApiErrorResponse } from "@/lib/api-errors";
 import { getProjectEvents } from "@/lib/db/queries";
 import { projectFiltersSchema } from "@/lib/validation";
 
@@ -22,6 +23,6 @@ export async function GET(request: Request, { params }: { params: Params }) {
     return NextResponse.json({ events: projectEvents }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Unable to load events." }, { status: 500 });
+    return buildApiErrorResponse(error, "Unable to load events.");
   }
 }

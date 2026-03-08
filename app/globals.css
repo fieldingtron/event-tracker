@@ -1,26 +1,43 @@
 :root {
-  --font-sans: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-sans: var(--font-inter), "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
   --font-mono: "SFMono-Regular", "Menlo", "Consolas", monospace;
-  --bg: #f6f1e7;
-  --bg-strong: #efe3cc;
-  --surface: rgba(255, 252, 246, 0.8);
-  --surface-strong: #fff8ec;
-  --surface-dark: #16231e;
-  --card-border: rgba(21, 35, 30, 0.12);
-  --card-shadow: 0 24px 48px rgba(25, 43, 36, 0.12);
-  --ink: #18221e;
-  --ink-soft: #495750;
+  --bg: #f8fafc;
+  --bg-strong: #f1f5f9;
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-strong: #ffffff;
+  --surface-dark: #0f172a;
+  --card-border: rgba(148, 163, 184, 0.2);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.05);
+  --ink: #0f172a;
+  --ink-soft: #64748b;
   --accent: #6366f1;
   --accent-strong: #4f46e5;
-  --accent-soft: rgba(99, 102, 241, 0.12);
-  --danger: #b34a34;
-  --warning: #d58a1e;
-  --grid: rgba(24, 34, 30, 0.08);
-  --ring: rgba(79, 70, 229, 0.35);
-  --radius-lg: 24px;
-  --radius-md: 18px;
-  --radius-sm: 12px;
+  --accent-soft: rgba(99, 102, 241, 0.1);
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --grid: rgba(148, 163, 184, 0.15);
+  --ring: rgba(99, 102, 241, 0.3);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
   --max-width: 1240px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1220;
+  --bg-strong: #111a2d;
+  --surface: rgba(17, 26, 45, 0.94);
+  --surface-strong: #17233b;
+  --surface-dark: #040812;
+  --card-border: rgba(148, 163, 184, 0.22);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.35);
+  --ink: #e2e8f0;
+  --ink-soft: #94a3b8;
+  --accent: #7c8cff;
+  --accent-strong: #9aa5ff;
+  --accent-soft: rgba(124, 140, 255, 0.16);
+  --ring: rgba(124, 140, 255, 0.32);
+  --grid: rgba(148, 163, 184, 0.16);
 }
 
 * {
@@ -29,17 +46,16 @@
 
 html {
   min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(255, 208, 122, 0.35), transparent 30%),
-    radial-gradient(circle at top right, rgba(14, 143, 104, 0.14), transparent 24%),
-    linear-gradient(180deg, #f8f4eb 0%, #f0e5d0 100%);
+  background: var(--bg);
 }
 
 body {
   min-height: 100vh;
   margin: 0;
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 a {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildApiErrorResponse } from "@/lib/api-errors";
 import { createProject, getProjects } from "@/lib/db/queries";
 import { projectCreateSchema } from "@/lib/validation";
 
@@ -9,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ projects: allProjects });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Unable to load projects." }, { status: 500 });
+    return buildApiErrorResponse(error, "Unable to load projects.");
   }
 }
 
@@ -29,6 +30,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Unable to create project." }, { status: 500 });
+    return buildApiErrorResponse(error, "Unable to create project.");
   }
 }

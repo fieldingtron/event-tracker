@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 --> statement-breakpoint
-CREATE TABLE "events" (
+CREATE TABLE IF NOT EXISTS "events" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"project_id" uuid NOT NULL,
 	"channel" varchar(64) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE "events" (
   ) STORED
 );
 --> statement-breakpoint
-CREATE TABLE "project_api_keys" (
+CREATE TABLE IF NOT EXISTS "project_api_keys" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"project_id" uuid NOT NULL,
 	"key_hash" varchar(64) NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE "project_api_keys" (
 	"revoked_at" timestamp with time zone
 );
 --> statement-breakpoint
-CREATE TABLE "projects" (
+CREATE TABLE IF NOT EXISTS "projects" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"name" varchar(64) NOT NULL,
@@ -33,36 +33,52 @@ CREATE TABLE "projects" (
 	"archived_at" timestamp with time zone
 );
 --> statement-breakpoint
-ALTER TABLE "events" ADD CONSTRAINT "events_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "project_api_keys" ADD CONSTRAINT "project_api_keys_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "events_project_created_idx" ON "events" USING btree ("project_id","created_at");--> statement-breakpoint
-CREATE INDEX "events_channel_idx" ON "events" USING btree ("channel");--> statement-breakpoint
-CREATE INDEX "events_search_idx" ON "events" USING gin ("search_document");--> statement-breakpoint
-CREATE INDEX "project_api_keys_project_idx" ON "project_api_keys" USING btree ("project_id");--> statement-breakpoint
-CREATE INDEX "project_api_keys_hash_idx" ON "project_api_keys" USING btree ("key_hash");--> statement-breakpoint
-CREATE INDEX "projects_user_idx" ON "projects" USING btree ("user_id");--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "events" ADD CONSTRAINT "events_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "project_api_keys" ADD CONSTRAINT "project_api_keys_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "events_project_created_idx" ON "events" USING btree ("project_id","created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "events_channel_idx" ON "events" USING btree ("channel");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "events_search_idx" ON "events" USING gin ("search_document");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "project_api_keys_project_idx" ON "project_api_keys" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "project_api_keys_hash_idx" ON "project_api_keys" USING btree ("key_hash");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "projects_user_idx" ON "projects" USING btree ("user_id");--> statement-breakpoint
 ALTER TABLE "projects" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "project_api_keys" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "events" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can view own projects"
   ON "projects"
   AS PERMISSIVE
   FOR SELECT
   TO authenticated
-  USING (auth.uid() = "user_id");--> statement-breakpoint
+  USING (auth.uid() = "user_id");
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can insert own projects"
   ON "projects"
   AS PERMISSIVE
   FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = "user_id");--> statement-breakpoint
+  WITH CHECK (auth.uid() = "user_id");
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can update own projects"
   ON "projects"
   AS PERMISSIVE
   FOR UPDATE
   TO authenticated
   USING (auth.uid() = "user_id")
-  WITH CHECK (auth.uid() = "user_id");--> statement-breakpoint
+  WITH CHECK (auth.uid() = "user_id");
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can view own api keys"
   ON "project_api_keys"
   AS PERMISSIVE
@@ -75,7 +91,10 @@ CREATE POLICY "Users can view own api keys"
       WHERE "projects"."id" = "project_api_keys"."project_id"
         AND "projects"."user_id" = auth.uid()
     )
-  );--> statement-breakpoint
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can manage own api keys"
   ON "project_api_keys"
   AS PERMISSIVE
@@ -96,7 +115,10 @@ CREATE POLICY "Users can manage own api keys"
       WHERE "projects"."id" = "project_api_keys"."project_id"
         AND "projects"."user_id" = auth.uid()
     )
-  );--> statement-breakpoint
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can view own events"
   ON "events"
   AS PERMISSIVE
@@ -109,7 +131,10 @@ CREATE POLICY "Users can view own events"
       WHERE "projects"."id" = "events"."project_id"
         AND "projects"."user_id" = auth.uid()
     )
-  );--> statement-breakpoint
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
 CREATE POLICY "Users can insert own events"
   ON "events"
   AS PERMISSIVE
@@ -122,7 +147,9 @@ CREATE POLICY "Users can insert own events"
       WHERE "projects"."id" = "events"."project_id"
         AND "projects"."user_id" = auth.uid()
     )
-  );--> statement-breakpoint
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
 DO $$
 BEGIN
   BEGIN

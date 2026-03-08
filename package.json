@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:baseline": "npx tsx scripts/baseline-migrations.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -21,6 +22,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.4.1",
+    "server-only": "^0.0.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {

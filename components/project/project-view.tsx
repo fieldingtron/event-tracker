@@ -169,6 +169,9 @@ export function ProjectView({
               onClick={() => setActiveTab(tab)}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === "feed" && totalEvents > 0 && (
+                <span className={styles.tabBadge}>{totalEvents}</span>
+              )}
             </button>
           ))}
         </div>

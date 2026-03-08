@@ -5,3 +5,6 @@ node_modules
 .env.local
 drizzle/meta
 npm-debug.log*
+.claude/
+*.swp
+*.swo

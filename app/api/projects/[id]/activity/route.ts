@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildApiErrorResponse } from "@/lib/api-errors";
 import { getProjectActivity } from "@/lib/db/queries";
 
 type Params = Promise<{ id: string }>;
@@ -12,6 +13,6 @@ export async function GET(_request: Request, { params }: { params: Params }) {
     return NextResponse.json({ activity }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Unable to load activity." }, { status: 500 });
+    return buildApiErrorResponse(error, "Unable to load activity.");
   }
 }

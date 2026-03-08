@@ -32,25 +32,27 @@ export function ActivityChart({ data }: ActivityChartProps) {
               <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="rgba(24, 34, 30, 0.08)" vertical={false} />
+          <CartesianGrid stroke="rgba(148, 163, 184, 0.15)" vertical={false} />
           <XAxis
             dataKey="bucket"
             tickFormatter={formatBucket}
-            tick={{ fill: "#62726a", fontSize: 12 }}
+            tick={{ fill: "#94a3b8", fontSize: 12 }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
             allowDecimals={false}
-            tick={{ fill: "#62726a", fontSize: 12 }}
+            tick={{ fill: "#94a3b8", fontSize: 12 }}
             tickLine={false}
             axisLine={false}
           />
           <Tooltip
             contentStyle={{
-              borderRadius: 16,
-              border: "1px solid rgba(24, 34, 30, 0.08)",
-              background: "rgba(255, 248, 236, 0.96)",
+              borderRadius: 10,
+              border: "1px solid rgba(148, 163, 184, 0.25)",
+              background: "rgba(255, 255, 255, 0.98)",
+              fontSize: 13,
+              boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
             }}
             labelFormatter={(value) => new Date(`${value}:00:00.000Z`).toLocaleString()}
           />
