@@ -1,9 +1,8 @@
-export type DashboardProject = {
+export type Project = {
   id: string;
   name: string;
-  archivedAt: string | null;
   createdAt: string;
-  keyPrefix: string | null;
+  eventCount: number;
 };
 
 export type DashboardEvent = {
@@ -22,8 +21,13 @@ export type ActivityBucket = {
   count: number;
 };
 
-export type DashboardQueryState = {
-  projectId: string;
+export type ChannelCount = {
   channel: string;
-  search: string;
+  count: number;
+};
+
+export type SettingsRecord = {
+  keyValue: string;
+  keyPrefix: string;
+  createdAt: string;
 };

@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { insertEventByApiKey } from "@/lib/db/queries";
+import {
+  createProject,
+  getProjectByName,
+  getSettings,
+  insertEvent,
+} from "@/lib/db/queries";
 import { eventIngestSchema } from "@/lib/validation";
 
 function getBearerToken(headerValue: string | null) {
-  if (!headerValue) {
-    return null;
-  }
-
+  if (!headerValue) return null;
   const [scheme, token] = headerValue.split(" ");
-  if (scheme !== "Bearer" || !token) {
-    return null;
-  }
-
+  if (scheme !== "Bearer" || !token) return null;
   return token.trim();
 }
 
@@ -26,41 +25,46 @@ export async function POST(request: Request) {
     );
   }
 
+  const settingsRecord = await getSettings();
+  if (!settingsRecord || settingsRecord.keyValue !== apiKey) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   const json = await request.json().catch(() => null);
   const parsed = eventIngestSchema.safeParse(json);
 
   if (!parsed.success) {
     return NextResponse.json(
-      {
-        error: "Invalid event payload.",
-        issues: parsed.error.flatten().fieldErrors,
-      },
+      { error: "Invalid event payload.", issues: parsed.error.flatten().fieldErrors },
       { status: 400 },
     );
   }
 
   try {
-    const result = await insertEventByApiKey(apiKey, parsed.data);
+    let project = await getProjectByName(parsed.data.project);
+    if (!project) {
+      project = await createProject(parsed.data.project);
+    }
+
+    const event = await insertEvent(project.id, {
+      channel: parsed.data.channel,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      icon: parsed.data.icon,
+      tags: parsed.data.tags,
+    });
 
     return NextResponse.json(
       {
         ok: true,
-        eventId: result.id,
-        projectId: result.projectId,
-        createdAt: result.createdAt.toISOString(),
+        eventId: event.id,
+        projectId: event.projectId,
+        createdAt: event.createdAt.toISOString(),
       },
       { status: 201 },
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "INVALID_API_KEY") {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
-
     console.error(error);
-
-    return NextResponse.json(
-      { error: "Unable to record the event." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Unable to record the event." }, { status: 500 });
   }
 }

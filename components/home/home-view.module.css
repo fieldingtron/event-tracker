@@ -1,0 +1,327 @@
+.page {
+  padding-top: 48px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}
+
+/* ── API Key Card ────────────────────────────────────── */
+.apiKeyCard {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  margin-bottom: 32px;
+}
+
+.apiKeyLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+
+.apiKeyRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.apiKeyValue {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.revealBtn {
+  flex-shrink: 0;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 0.88rem !important;
+  background: white !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 999px !important;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+}
+
+.revealBtn:hover {
+  background: var(--accent-soft) !important;
+}
+
+/* ── Empty State ─────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  gap: 12px;
+}
+
+.emptyIcon {
+  color: var(--card-border);
+  margin-bottom: 8px;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+
+.emptySubtitle {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  max-width: 320px;
+}
+
+/* ── Project Grid ────────────────────────────────────── */
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.projectCard {
+  background: white;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-align: left;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+  cursor: pointer;
+}
+
+.projectCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.projectCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+}
+
+.projectInitials {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+.projectCardBottom {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.projectName {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.projectCount {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/* ── New Project Card ────────────────────────────────── */
+.newProjectCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 160px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 2px dashed var(--card-border);
+  border-radius: var(--radius-md);
+  color: var(--ink-soft);
+  transition: all 140ms ease;
+  cursor: pointer;
+}
+
+.newProjectCard:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.plusIcon {
+  font-size: 1.8rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.newProjectLabel {
+  font-size: 0.9rem;
+}
+
+/* ── Create Project Overlay ──────────────────────────── */
+.createOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.createModal {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.createModal h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.createActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── Sample Data ─────────────────────────────────────── */
+.sampleSection {
+  margin-top: 16px;
+}
+
+.sampleToggle {
+  background: none;
+  border: none;
+  padding: 8px 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sampleToggle:hover {
+  color: var(--ink);
+}
+
+.sampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sampleCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.sampleCard:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.sampleCard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sampleCardIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.sampleCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sampleCardName {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.sampleCardSub {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.sampleProgress {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 600px) {
+  .projectGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

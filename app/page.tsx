@@ -1,13 +1,16 @@
-import { redirect } from "next/navigation";
+export const dynamic = "force-dynamic";
 
-import { getCurrentUser } from "@/lib/auth";
+import { HomeView } from "@/components/home/home-view";
+import { getProjects, getSettings } from "@/lib/db/queries";
 
 export default async function HomePage() {
-  const user = await getCurrentUser();
+  const [projects, settingsRecord] = await Promise.all([getProjects(), getSettings()]);
 
-  if (user) {
-    redirect("/dashboard");
-  }
-
-  redirect("/login");
+  return (
+    <HomeView
+      projects={projects}
+      keyPrefix={settingsRecord?.keyPrefix ?? null}
+      keyExists={settingsRecord !== null}
+    />
+  );
 }

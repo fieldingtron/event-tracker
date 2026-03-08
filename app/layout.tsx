@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pulseboard",
-  description: "Real-time project event monitoring with Supabase and Next.js.",
+  title: "Events Dashboard",
+  description: "Your projects, your events, all in one place.",
 };
 
 export default function RootLayout({

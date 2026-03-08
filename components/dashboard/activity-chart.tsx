@@ -28,8 +28,8 @@ export function ActivityChart({ data }: ActivityChartProps) {
         <AreaChart data={data}>
           <defs>
             <linearGradient id="activityFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0e8f68" stopOpacity={0.45} />
-              <stop offset="100%" stopColor="#0e8f68" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="#6366f1" stopOpacity={0.45} />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="rgba(24, 34, 30, 0.08)" vertical={false} />
@@ -57,7 +57,7 @@ export function ActivityChart({ data }: ActivityChartProps) {
           <Area
             type="monotone"
             dataKey="count"
-            stroke="#04684a"
+            stroke="#4f46e5"
             strokeWidth={3}
             fill="url(#activityFill)"
           />
