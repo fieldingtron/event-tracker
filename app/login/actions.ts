@@ -9,6 +9,12 @@ export async function login(formData: FormData) {
 
     const email = formData.get("email") as string;
 
+    const allowedEmails = process.env.ALLOWED_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) || [];
+    if (allowedEmails.length > 0 && !allowedEmails.includes(email.toLowerCase())) {
+        return redirect("/login?message=Unauthorized email address.");
+    }
+
+
     const headerList = await headers();
     const host = headerList.get("x-forwarded-host") || headerList.get("host") || "localhost:3000";
     const protocol = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
@@ -17,6 +23,7 @@ export async function login(formData: FormData) {
         email,
         options: {
             emailRedirectTo: `${siteUrl}/auth/callback`,
+            shouldCreateUser: false, // Prevents Supabase from making new accounts for random people
         },
     });
 
