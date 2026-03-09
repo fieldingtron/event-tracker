@@ -1,7 +1,6 @@
 "use server"
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export async function login(formData: FormData) {
@@ -15,10 +14,7 @@ export async function login(formData: FormData) {
     }
 
 
-    const headerList = await headers();
-    const host = headerList.get("x-forwarded-host") || headerList.get("host") || "localhost:3000";
-    const protocol = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-    const siteUrl = `${protocol}://${host}`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
