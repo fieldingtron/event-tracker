@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import styles from "./home-view.module.css";
 
@@ -62,6 +62,68 @@ const SCENARIOS: Scenario[] = [
     ],
   },
   {
+    id: "apple-health",
+    label: "iPhone Health",
+    subtitle: "Sample data from iPhone",
+    icon: "phone",
+    events: [
+      {
+        project: "Apple Health",
+        channel: "steps",
+        title: "IPHONE STEP COUNT IMPORTED",
+        description: "8,742 steps imported from iPhone Health data for today",
+        tags: { metric: "steps", unit: "count", value: "8742", source: "apple_health" },
+      },
+      {
+        project: "Apple Health",
+        channel: "blood-pressure",
+        title: "BLOOD PRESSURE READING SYNCED",
+        description: "Resting blood pressure recorded at 118/76 mmHg",
+        tags: {
+          metric: "blood_pressure",
+          systolic: "118",
+          diastolic: "76",
+          unit: "mmHg",
+          source: "apple_health",
+        },
+      },
+      {
+        project: "Apple Health",
+        channel: "heart-rate",
+        title: "RESTING HEART RATE RECORDED",
+        description: "Morning resting heart rate measured at 62 BPM",
+        tags: { metric: "heart_rate", value: "62", unit: "bpm", context: "resting", source: "apple_health" },
+      },
+      {
+        project: "Apple Health",
+        channel: "sleep",
+        title: "SLEEP SESSION IMPORTED",
+        description: "7h 34m of sleep imported for the previous night",
+        tags: { metric: "sleep", duration: "454", unit: "minutes", source: "apple_health" },
+      },
+      {
+        project: "Apple Health",
+        channel: "active-energy",
+        title: "ACTIVE ENERGY UPDATED",
+        description: "Move calories reached 540 kcal",
+        tags: { metric: "active_energy", value: "540", unit: "kcal", source: "apple_health" },
+      },
+      {
+        project: "Apple Health",
+        channel: "workouts",
+        title: "WALKING WORKOUT LOGGED",
+        description: "42-minute outdoor walk captured from iPhone Health data",
+        tags: {
+          metric: "workout",
+          workout_type: "walking",
+          duration: "42",
+          unit: "minutes",
+          source: "apple_health",
+        },
+      },
+    ],
+  },
+  {
     id: "blogwave",
     label: "BlogWave",
     subtitle: "Content platform",
@@ -89,40 +151,75 @@ const SEND_BATCH_SIZE = 5;
 
 export function SampleDataLoader({ apiKey, onLoad }: { apiKey: string | null; onLoad: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [resolvedApiKey, setResolvedApiKey] = useState<string | null>(apiKey);
   const [sending, setSending] = useState<string | null>(null);
   const [progress, setProgress] = useState({ sent: 0, total: 0 });
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (apiKey) {
+      setResolvedApiKey(apiKey);
+    }
+  }, [apiKey]);
+
+  const getApiKey = async () => {
+    if (resolvedApiKey) return resolvedApiKey;
+
+    const response = await fetch("/api/settings/api-key");
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok || !data?.keyValue) {
+      throw new Error(data?.error ?? "Unable to load API key for sample data.");
+    }
+
+    setResolvedApiKey(data.keyValue);
+    return data.keyValue as string;
+  };
 
   const handleLoad = async (scenarioId: string) => {
-    if (!apiKey) return;
     const scenario = ALL_SCENARIOS.find((s) => s.id === scenarioId);
     if (!scenario) return;
 
     setSending(scenarioId);
     setProgress({ sent: 0, total: scenario.events.length });
+    setStatusMessage(null);
 
-    let sent = 0;
+    try {
+      const authorizationKey = await getApiKey();
+      let sent = 0;
 
-    for (let i = 0; i < scenario.events.length; i += SEND_BATCH_SIZE) {
-      const batch = scenario.events.slice(i, i + SEND_BATCH_SIZE);
-      await Promise.all(
-        batch.map((event) =>
-          fetch("/api/events", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify(event),
-          }).catch(() => undefined),
-        ),
-      );
+      for (let i = 0; i < scenario.events.length; i += SEND_BATCH_SIZE) {
+        const batch = scenario.events.slice(i, i + SEND_BATCH_SIZE);
+        await Promise.all(
+          batch.map(async (event) => {
+            const response = await fetch("/api/events", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authorizationKey}`,
+              },
+              body: JSON.stringify(event),
+            });
 
-      sent += batch.length;
-      setProgress({ sent, total: scenario.events.length });
+            if (!response.ok) {
+              const data = await response.json().catch(() => null);
+              throw new Error(data?.error ?? `Unable to import sample data (${response.status}).`);
+            }
+          }),
+        );
+
+        sent += batch.length;
+        setProgress({ sent, total: scenario.events.length });
+      }
+
+      setStatusMessage(`Imported ${scenario.events.length} sample events for ${scenario.label}.`);
+      onLoad();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to import sample data.";
+      setStatusMessage(message);
+    } finally {
+      setSending(null);
     }
-
-    setSending(null);
-    onLoad();
   };
 
   return (
@@ -152,8 +249,7 @@ export function SampleDataLoader({ apiKey, onLoad }: { apiKey: string | null; on
                 key={s.id}
                 className={styles.sampleCard}
                 onClick={() => handleLoad(s.id)}
-                disabled={sending !== null || !apiKey}
-                title={!apiKey ? "Reveal your API key first" : undefined}
+                disabled={sending !== null}
               >
                 <span className={styles.sampleCardIcon}>{s.icon}</span>
                 <span className={styles.sampleCardText}>
@@ -166,6 +262,11 @@ export function SampleDataLoader({ apiKey, onLoad }: { apiKey: string | null; on
           {sending && (
             <p className={styles.sampleProgress}>
               Sending events... {progress.sent}/{progress.total}
+            </p>
+          )}
+          {statusMessage && (
+            <p className={styles.sampleStatus}>
+              {statusMessage}
             </p>
           )}
         </>

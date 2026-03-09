@@ -27,8 +27,8 @@
 
 .themeToggle:hover {
   border-color: var(--accent);
-  color: var(--accent-strong);
   background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .title {
@@ -49,7 +49,9 @@
 
 /* ── API Key Card ────────────────────────────────────── */
 .apiKeyCard {
-  background: var(--surface-dark);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
   border-radius: var(--radius-md);
   padding: 20px 24px;
   margin-bottom: 32px;
@@ -71,8 +73,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-strong);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
 }
@@ -81,7 +83,7 @@
   flex: 1;
   font-family: var(--font-mono);
   font-size: 0.88rem;
-  color: #a5b4fc;
+  color: var(--ink);
   letter-spacing: 0.06em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -96,15 +98,41 @@
   padding: 0 14px;
   font-size: 0.8rem;
   font-weight: 600;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--accent-soft);
+  border: 1px solid rgba(99, 102, 241, 0.24);
   border-radius: 999px;
-  color: #a5b4fc;
+  color: var(--accent-strong);
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease;
 }
 
 .revealBtn:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.36);
+}
+
+:global(:root[data-theme="dark"]) .apiKeyCard {
+  background: var(--surface-dark);
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow: none;
+}
+
+:global(:root[data-theme="dark"]) .apiKeyRow {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:global(:root[data-theme="dark"]) .apiKeyValue {
+  color: #a5b4fc;
+}
+
+:global(:root[data-theme="dark"]) .revealBtn {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+:global(:root[data-theme="dark"]) .revealBtn:hover {
   background: rgba(99, 102, 241, 0.35);
 }
 
@@ -382,6 +410,12 @@
 }
 
 .sampleProgress {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.sampleStatus {
   margin-top: 10px;
   font-size: 0.82rem;
   color: var(--ink-soft);

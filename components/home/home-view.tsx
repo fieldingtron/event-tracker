@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { logout } from "@/app/login/actions";
 import type { Project } from "@/lib/types";
 import styles from "./home-view.module.css";
 
@@ -39,6 +40,10 @@ type HomeViewProps = {
   keyExists: boolean;
 };
 
+type ThemePreference = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
+const THEME_ORDER: ThemePreference[] = ["light", "dark", "system"];
+
 export function HomeView({ projects: initialProjects, keyPrefix: initialKeyPrefix, keyExists }: HomeViewProps) {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
@@ -49,25 +54,49 @@ export function HomeView({ projects: initialProjects, keyPrefix: initialKeyPrefi
   const [isCreating, setIsCreating] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [themePreference, setThemePreference] = useState<ThemePreference>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
-  const applyTheme = useCallback((nextTheme: "light" | "dark") => {
+  const resolveTheme = useCallback((preference: ThemePreference): ResolvedTheme => {
+    if (preference === "system") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return preference;
+  }, []);
+
+  const applyTheme = useCallback((preference: ThemePreference) => {
+    const nextTheme = resolveTheme(preference);
     document.documentElement.dataset.theme = nextTheme;
     document.documentElement.style.colorScheme = nextTheme;
-    localStorage.setItem("theme", nextTheme);
-    setTheme(nextTheme);
-  }, []);
+    localStorage.setItem("theme", preference);
+    setThemePreference(preference);
+    setResolvedTheme(nextTheme);
+  }, [resolveTheme]);
 
   useEffect(() => {
-    const current = document.documentElement.dataset.theme;
-    if (current === "dark" || current === "light") {
-      setTheme(current);
-      return;
-    }
+    const stored = localStorage.getItem("theme");
+    const nextPreference: ThemePreference =
+      stored === "dark" || stored === "light" || stored === "system" ? stored : "system";
+    applyTheme(nextPreference);
+  }, [applyTheme]);
 
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setTheme(prefersDark ? "dark" : "light");
-  }, []);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      if (themePreference !== "system") return;
+      const nextTheme = mediaQuery.matches ? "dark" : "light";
+      document.documentElement.dataset.theme = nextTheme;
+      document.documentElement.style.colorScheme = nextTheme;
+      setResolvedTheme(nextTheme);
+    };
+
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, [themePreference]);
 
   useEffect(() => {
     if (!keyExists) {
@@ -83,7 +112,7 @@ export function HomeView({ projects: initialProjects, keyPrefix: initialKeyPrefi
 
   const handleReveal = async () => {
     if (revealedKey) {
-      await navigator.clipboard.writeText(revealedKey).catch(() => {});
+      await navigator.clipboard.writeText(revealedKey).catch(() => { });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       return;
@@ -127,6 +156,12 @@ export function HomeView({ projects: initialProjects, keyPrefix: initialKeyPrefi
     [router],
   );
 
+  const handleThemeToggle = useCallback(() => {
+    const currentIndex = THEME_ORDER.indexOf(themePreference);
+    const nextPreference = THEME_ORDER[(currentIndex + 1) % THEME_ORDER.length];
+    applyTheme(nextPreference);
+  }, [applyTheme, themePreference]);
+
   const maskedKey = useMemo(
     () => (keyPrefix ? `${keyPrefix}${"•".repeat(30)}` : `ev_${"•".repeat(36)}`),
     [keyPrefix],
@@ -141,14 +176,23 @@ export function HomeView({ projects: initialProjects, keyPrefix: initialKeyPrefi
             <h1 className={styles.title}>Events Dashboard</h1>
             <p className={styles.subtitle}>Your projects, your events, all in one place.</p>
           </div>
-          <button
-            type="button"
-            className={styles.themeToggle}
-            onClick={() => applyTheme(theme === "dark" ? "light" : "dark")}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-          >
-            {theme === "dark" ? "Light mode" : "Dark mode"}
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <form action={logout}>
+              <button className="button secondary text-sm py-1 px-3">Logout</button>
+            </form>
+            <button
+              type="button"
+              className={styles.themeToggle}
+              onClick={handleThemeToggle}
+              aria-label={
+                themePreference === "system"
+                  ? `Theme is system, currently ${resolvedTheme}. Click to cycle theme mode.`
+                  : `Theme is ${themePreference}. Click to cycle theme mode.`
+              }
+            >
+              {themePreference === "dark" ? "Dark" : themePreference === "light" ? "Light" : "System"}
+            </button>
+          </div>
         </div>
       </header>
 

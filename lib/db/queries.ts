@@ -13,7 +13,7 @@ import type {
   SettingsRecord,
 } from "@/lib/types";
 
-const SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000";
+
 
 function tagsToArray(tags: Record<string, string> | null | undefined): string[] {
   if (!tags) return [];
@@ -22,11 +22,11 @@ function tagsToArray(tags: Record<string, string> | null | undefined): string[] 
 
 // ─── Settings / Global API Key ───────────────────────────────────────────────
 
-export async function getSettings(): Promise<SettingsRecord | null> {
+export async function getSettings(userId: string): Promise<SettingsRecord | null> {
   const [row] = await db
     .select()
     .from(settings)
-    .where(eq(settings.id, "default"))
+    .where(and(eq(settings.id, "default"), eq(settings.userId, userId)))
     .limit(1);
 
   if (!row) return null;
@@ -37,28 +37,28 @@ export async function getSettings(): Promise<SettingsRecord | null> {
   };
 }
 
-export async function getOrCreateSettings(): Promise<SettingsRecord> {
-  const existing = await getSettings();
+export async function getOrCreateSettings(userId: string): Promise<SettingsRecord> {
+  const existing = await getSettings(userId);
   if (existing) return existing;
 
   const { key, prefix } = generateApiKey();
   await db
     .insert(settings)
-    .values({ keyValue: key, keyPrefix: prefix })
+    .values({ userId, keyValue: key, keyPrefix: prefix })
     .onConflictDoNothing();
 
-  const record = await getSettings();
+  const record = await getSettings(userId);
   if (!record) throw new Error("Failed to initialize settings");
   return record;
 }
 
-export async function regenerateSettings(): Promise<SettingsRecord> {
+export async function regenerateSettings(userId: string): Promise<SettingsRecord> {
   const { key, prefix } = generateApiKey();
 
   const [updated] = await db
     .update(settings)
     .set({ keyValue: key, keyPrefix: prefix })
-    .where(eq(settings.id, "default"))
+    .where(and(eq(settings.id, "default"), eq(settings.userId, userId)))
     .returning();
 
   if (updated) {
@@ -71,7 +71,7 @@ export async function regenerateSettings(): Promise<SettingsRecord> {
 
   const [inserted] = await db
     .insert(settings)
-    .values({ keyValue: key, keyPrefix: prefix })
+    .values({ userId, keyValue: key, keyPrefix: prefix })
     .returning();
 
   return {
@@ -83,7 +83,7 @@ export async function regenerateSettings(): Promise<SettingsRecord> {
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
-export async function getProjects(): Promise<Project[]> {
+export async function getProjects(userId: string): Promise<Project[]> {
   const rows = await db
     .select({
       id: projects.id,
@@ -93,7 +93,7 @@ export async function getProjects(): Promise<Project[]> {
     })
     .from(projects)
     .leftJoin(events, eq(events.projectId, projects.id))
-    .where(isNull(projects.archivedAt))
+    .where(and(eq(projects.userId, userId), isNull(projects.archivedAt)))
     .groupBy(projects.id)
     .orderBy(desc(projects.createdAt));
 
@@ -103,7 +103,7 @@ export async function getProjects(): Promise<Project[]> {
   }));
 }
 
-export async function getProjectById(id: string): Promise<Project | null> {
+export async function getProjectById(id: string, userId: string): Promise<Project | null> {
   const [row] = await db
     .select({
       id: projects.id,
@@ -113,7 +113,7 @@ export async function getProjectById(id: string): Promise<Project | null> {
     })
     .from(projects)
     .leftJoin(events, eq(events.projectId, projects.id))
-    .where(and(eq(projects.id, id), isNull(projects.archivedAt)))
+    .where(and(eq(projects.id, id), eq(projects.userId, userId), isNull(projects.archivedAt)))
     .groupBy(projects.id)
     .limit(1);
 
@@ -121,13 +121,14 @@ export async function getProjectById(id: string): Promise<Project | null> {
   return { ...row, createdAt: row.createdAt.toISOString() };
 }
 
-export async function getProjectByName(name: string): Promise<{ id: string; name: string } | null> {
+export async function getProjectByName(name: string, userId: string): Promise<{ id: string; name: string } | null> {
   const [row] = await db
     .select({ id: projects.id, name: projects.name })
     .from(projects)
     .where(
       and(
         sql`lower(${projects.name}) = lower(${name})`,
+        eq(projects.userId, userId),
         isNull(projects.archivedAt),
       ),
     )
@@ -136,10 +137,10 @@ export async function getProjectByName(name: string): Promise<{ id: string; name
   return row ?? null;
 }
 
-export async function createProject(name: string): Promise<Project> {
+export async function createProject(name: string, userId: string): Promise<Project> {
   const [project] = await db
     .insert(projects)
-    .values({ userId: SYSTEM_USER_ID, name })
+    .values({ userId, name })
     .returning({
       id: projects.id,
       name: projects.name,
@@ -153,8 +154,13 @@ export async function createProject(name: string): Promise<Project> {
 
 export async function getProjectEvents(
   projectId: string,
+  userId: string,
   filters: { channel?: string; search?: string; limit?: number },
 ): Promise<DashboardEvent[]> {
+  // First, verify the user owns this project
+  const project = await getProjectById(projectId, userId);
+  if (!project) throw new Error("Unauthorized or project not found");
+
   const conditions = [eq(events.projectId, projectId)];
 
   if (filters.channel) {
@@ -190,7 +196,11 @@ export async function getProjectEvents(
   }));
 }
 
-export async function getProjectActivity(projectId: string): Promise<ActivityBucket[]> {
+export async function getProjectActivity(projectId: string, userId: string): Promise<ActivityBucket[]> {
+  // First, verify the user owns this project
+  const project = await getProjectById(projectId, userId);
+  if (!project) throw new Error("Unauthorized or project not found");
+
   const rows = await db.execute(sql`
     with buckets as (
       select generate_series(
@@ -219,7 +229,11 @@ export async function getProjectActivity(projectId: string): Promise<ActivityBuc
   }));
 }
 
-export async function getProjectChannels(projectId: string): Promise<ChannelCount[]> {
+export async function getProjectChannels(projectId: string, userId: string): Promise<ChannelCount[]> {
+  // First, verify the user owns this project
+  const project = await getProjectById(projectId, userId);
+  if (!project) throw new Error("Unauthorized or project not found");
+
   const rows = await db
     .select({
       channel: events.channel,
@@ -235,6 +249,7 @@ export async function getProjectChannels(projectId: string): Promise<ChannelCoun
 
 export async function insertEvent(
   projectId: string,
+  userId: string,
   payload: {
     channel: string;
     title: string;
@@ -243,6 +258,12 @@ export async function insertEvent(
     tags?: Record<string, string> | null;
   },
 ) {
+  // First, verify the user owns this project 
+  // Optionally bypassed if checking at the API level via API keys, 
+  // but good defense in depth
+  const project = await getProjectById(projectId, userId);
+  if (!project) throw new Error("Unauthorized or project not found");
+
   const [event] = await db
     .insert(events)
     .values({

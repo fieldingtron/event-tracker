@@ -1,6 +1,7 @@
 import {
   index,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -8,15 +9,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const settings = pgTable("settings", {
-  id: varchar("id", { length: 16 }).primaryKey().default("default"),
-  keyValue: varchar("key_value", { length: 80 }).notNull(),
-  keyPrefix: varchar("key_prefix", { length: 20 }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
+export const settings = pgTable(
+  "settings",
+  {
+    id: varchar("id", { length: 16 }).default("default").notNull(),
+    userId: uuid("user_id").notNull(),
+    keyValue: varchar("key_value", { length: 80 }).notNull(),
+    keyPrefix: varchar("key_prefix", { length: 20 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.id, table.userId] }),
+    index("settings_user_idx").on(table.userId),
+  ]
+);
 export const projects = pgTable(
   "projects",
   {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { ActivityChart } from "@/components/dashboard/activity-chart";
+import { logout } from "@/app/login/actions";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import type { ActivityBucket, ChannelCount, DashboardEvent } from "@/lib/types";
 import styles from "./project-view.module.css";
@@ -151,29 +152,36 @@ export function ProjectView({
     <div className={styles.shell}>
       {/* TOP NAV */}
       <nav className={styles.topNav}>
-        <Link href="/" className={styles.homeLink}>
-          <HomeIcon />
-        </Link>
-        <span className={styles.breadcrumbSep}>/</span>
-        <span
-          className={styles.projectDot}
-          style={{ background: projectColor }}
-        />
-        <span className={styles.projectTitle}>{projectName}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link href="/" className={styles.homeLink}>
+            <HomeIcon />
+          </Link>
+          <span className={styles.breadcrumbSep}>/</span>
+          <span
+            className={styles.projectDot}
+            style={{ background: projectColor }}
+          />
+          <span className={styles.projectTitle}>{projectName}</span>
+        </div>
 
-        <div className={styles.tabs}>
-          {(["feed", "charts", "insights", "playground"] as Tab[]).map((tab) => (
-            <button
-              key={tab}
-              className={activeTab === tab ? styles.activeTab : styles.tab}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              {tab === "feed" && totalEvents > 0 && (
-                <span className={styles.tabBadge}>{totalEvents}</span>
-              )}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
+          <div className={styles.tabs}>
+            {(["feed", "charts", "insights", "playground"] as Tab[]).map((tab) => (
+              <button
+                key={tab}
+                className={activeTab === tab ? styles.activeTab : styles.tab}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === "feed" && totalEvents > 0 && (
+                  <span className={styles.tabBadge}>{totalEvents}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <form action={logout}>
+            <button className="button secondary text-sm py-1 px-3">Logout</button>
+          </form>
         </div>
       </nav>
 
@@ -433,7 +441,7 @@ function PlaygroundTab({ projectName }: { projectName: string }) {
     fetch("/api/settings/api-key")
       .then((r) => r.json())
       .then((d) => setApiKey(d.keyValue ?? ""))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleSend = async () => {

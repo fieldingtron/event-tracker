@@ -2,11 +2,18 @@ import { NextResponse } from "next/server";
 
 import { buildApiErrorResponse } from "@/lib/api-errors";
 import { createProject, getProjects } from "@/lib/db/queries";
+import { createClient } from "@/lib/supabase/server";
 import { projectCreateSchema } from "@/lib/validation";
 
 export async function GET() {
   try {
-    const allProjects = await getProjects();
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const allProjects = await getProjects(user.id);
     return NextResponse.json({ projects: allProjects });
   } catch (error) {
     console.error(error);
@@ -26,7 +33,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const project = await createProject(parsed.data.name);
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const project = await createProject(parsed.data.name, user.id);
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
     console.error(error);
