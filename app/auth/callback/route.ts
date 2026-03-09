@@ -10,8 +10,8 @@ export async function GET(request: Request) {
     const next = searchParams.get('next') ?? '/'
 
     const headerList = await headers();
-    const host = headerList.get("host") || "localhost:3000";
-    const protocol = host.includes("localhost") ? "http" : "https";
+    const host = headerList.get("x-forwarded-host") || headerList.get("host") || "localhost:3000";
+    const protocol = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
     const origin = `${protocol}://${host}`;
 
     if (code) {

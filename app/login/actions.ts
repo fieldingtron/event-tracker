@@ -10,8 +10,8 @@ export async function login(formData: FormData) {
     const email = formData.get("email") as string;
 
     const headerList = await headers();
-    const host = headerList.get("host") || "localhost:3000";
-    const protocol = host.includes("localhost") ? "http" : "https";
+    const host = headerList.get("x-forwarded-host") || headerList.get("host") || "localhost:3000";
+    const protocol = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
     const siteUrl = `${protocol}://${host}`;
     const { error } = await supabase.auth.signInWithOtp({
         email,
