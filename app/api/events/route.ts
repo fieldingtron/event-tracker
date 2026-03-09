@@ -4,7 +4,7 @@ import { buildApiErrorResponse } from "@/lib/api-errors";
 import {
   createProject,
   getProjectByName,
-  getSettings,
+  getSettingsByApiKey,
   insertEvent,
 } from "@/lib/db/queries";
 import { eventIngestSchema } from "@/lib/validation";
@@ -37,17 +37,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const settingsRecord = await getSettings();
-    if (!settingsRecord || settingsRecord.keyValue !== apiKey) {
+    const settingsRecord = await getSettingsByApiKey(apiKey);
+    if (!settingsRecord) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    let project = await getProjectByName(parsed.data.project);
+    const userId = settingsRecord.userId;
+
+    let project = await getProjectByName(parsed.data.project, userId);
     if (!project) {
-      project = await createProject(parsed.data.project);
+      project = await createProject(parsed.data.project, userId);
     }
 
-    const event = await insertEvent(project.id, {
+    const event = await insertEvent(project.id, userId, {
       channel: parsed.data.channel,
       title: parsed.data.title,
       description: parsed.data.description,

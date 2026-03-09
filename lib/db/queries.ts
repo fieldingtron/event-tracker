@@ -37,6 +37,16 @@ export async function getSettings(userId: string): Promise<SettingsRecord | null
   };
 }
 
+export async function getSettingsByApiKey(apiKey: string): Promise<{ userId: string } | null> {
+  const [row] = await db
+    .select({ userId: settings.userId })
+    .from(settings)
+    .where(and(eq(settings.id, "default"), eq(settings.keyValue, apiKey)))
+    .limit(1);
+
+  return row ?? null;
+}
+
 export async function getOrCreateSettings(userId: string): Promise<SettingsRecord> {
   const existing = await getSettings(userId);
   if (existing) return existing;
