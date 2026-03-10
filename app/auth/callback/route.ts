@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
@@ -9,10 +8,10 @@ export async function GET(request: Request) {
     const type = searchParams.get('type')
     const next = searchParams.get('next') ?? '/'
 
-    const headerList = await headers();
-    const host = headerList.get("x-forwarded-host") || headerList.get("host") || "localhost:3000";
-    const protocol = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL
+        || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+        || "http://localhost:3000";
 
     if (code) {
         const supabase = await createClient()
