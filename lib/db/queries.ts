@@ -119,7 +119,7 @@ export async function getProjectById(id: string, userId: string): Promise<Projec
       id: projects.id,
       name: projects.name,
       createdAt: projects.createdAt,
-      eventCount: sql<number>`count(${events.id})::int`,
+      eventCount: sql<number>`CAST(count(${events.id}) AS INTEGER)`,
     })
     .from(projects)
     .leftJoin(events, eq(events.projectId, projects.id))
