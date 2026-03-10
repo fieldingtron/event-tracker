@@ -76,6 +76,14 @@ export default async function LoginPage(props: { searchParams: Promise<{ message
                     )}
                 </form>
             </div>
+            <div style={{ marginTop: '32px', padding: '16px', background: 'var(--surface-sunken)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--ink-soft)' }}>
+                <p><strong>Debug Info:</strong></p>
+                <p>NODE_ENV: {process.env.NODE_ENV}</p>
+                <p>NEXT_PUBLIC_SITE_URL: {process.env.NEXT_PUBLIC_SITE_URL || 'undefined'}</p>
+                <p>VERCEL_ENV: {process.env.VERCEL_ENV || 'undefined'}</p>
+                <p>VERCEL_URL: {process.env.VERCEL_URL || 'undefined'}</p>
+                <p>NEXT_PUBLIC_VERCEL_URL: {process.env.NEXT_PUBLIC_VERCEL_URL || 'undefined'}</p>
+            </div>
         </main>
     )
 }
