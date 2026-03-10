@@ -8,10 +8,9 @@ export async function GET(request: Request) {
     const type = searchParams.get('type')
     const next = searchParams.get('next') ?? '/'
 
+    const isProd = process.env.NODE_ENV === 'production';
     const origin = process.env.NEXT_PUBLIC_SITE_URL
-        || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
-        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-        || "http://localhost:3000";
+        || (isProd ? "https://event-tracker-ashen.vercel.app" : "http://localhost:3000");
 
     if (code) {
         const supabase = await createClient()

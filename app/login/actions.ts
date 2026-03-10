@@ -14,10 +14,10 @@ export async function login(formData: FormData) {
     }
 
 
+    // Determine the site URL based on the environment
+    const isProd = process.env.NODE_ENV === 'production';
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-        || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
-        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-        || "http://localhost:3000";
+        || (isProd ? "https://event-tracker-ashen.vercel.app" : "http://localhost:3000");
     const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
