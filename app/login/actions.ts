@@ -30,7 +30,7 @@ export async function login(formData: FormData) {
         return redirect("/login?message=" + encodeURIComponent(error.message));
     }
 
-    return redirect("/login?message=Check email to continue sign in process");
+    return redirect("/login?message=Check email to continue sign in process. (Debug siteUrl: " + encodeURIComponent(siteUrl) + ")");
 }
 
 export async function logout() {
