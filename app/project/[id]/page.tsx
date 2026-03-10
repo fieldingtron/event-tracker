@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic";
 import { notFound, redirect } from "next/navigation";
 
 import { ProjectView } from "@/components/project/project-view";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import {
   getProjectActivity,
   getProjectById,
@@ -16,18 +17,19 @@ type Params = Promise<{ id: string }>;
 export default async function ProjectPage({ params }: { params: Params }) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
 
   const [project, events, activity, channels] = await Promise.all([
-    getProjectById(id, user.id),
-    getProjectEvents(id, user.id, { limit: 100 }),
-    getProjectActivity(id, user.id),
-    getProjectChannels(id, user.id),
+    getProjectById(id, session.user.id),
+    getProjectEvents(id, session.user.id, { limit: 100 }),
+    getProjectActivity(id, session.user.id),
+    getProjectChannels(id, session.user.id),
   ]);
 
   if (!project) notFound();

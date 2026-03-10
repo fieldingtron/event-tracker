@@ -2,20 +2,22 @@ export const dynamic = "force-dynamic";
 
 import { HomeView } from "@/components/home/home-view";
 import { getProjects, getSettings } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
 
   const [projects, settingsRecord] = await Promise.all([
-    getProjects(user.id),
-    getSettings(user.id)
+    getProjects(session.user.id),
+    getSettings(session.user.id)
   ]);
 
   return (

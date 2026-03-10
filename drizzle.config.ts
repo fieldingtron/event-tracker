@@ -14,10 +14,9 @@ if (fs.existsSync(".env.local")) {
 export default defineConfig({
   schema: "./lib/db/schema.ts",
   out: "./drizzle",
-  dialect: "postgresql",
+  dialect: "turso",
   dbCredentials: {
-    url:
-      process.env.DATABASE_URL ??
-      "postgresql://postgres:postgres@127.0.0.1:5432/postgres",
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
   },
 });

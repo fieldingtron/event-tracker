@@ -99,7 +99,7 @@ export async function getProjects(userId: string): Promise<Project[]> {
       id: projects.id,
       name: projects.name,
       createdAt: projects.createdAt,
-      eventCount: sql<number>`count(${events.id})::int`,
+      eventCount: sql<number>`CAST(count(${events.id}) AS INTEGER)`,
     })
     .from(projects)
     .leftJoin(events, eq(events.projectId, projects.id))
@@ -179,7 +179,7 @@ export async function getProjectEvents(
 
   if (filters.search?.trim()) {
     conditions.push(
-      sql`"events"."search_document" @@ websearch_to_tsquery('english', ${filters.search.trim()})`,
+      sql`(${events.title} LIKE ${`%${filters.search.trim()}%`} OR ${events.description} LIKE ${`%${filters.search.trim()}%`})`,
     );
   }
 
@@ -211,26 +211,34 @@ export async function getProjectActivity(projectId: string, userId: string): Pro
   const project = await getProjectById(projectId, userId);
   if (!project) throw new Error("Unauthorized or project not found");
 
-  const rows = await db.execute(sql`
-    with buckets as (
-      select generate_series(
-        date_trunc('hour', now() - interval '23 hour'),
-        date_trunc('hour', now()),
-        interval '1 hour'
-      ) as bucket
-    ),
-    matching_events as (
-      select date_trunc('hour', created_at) as bucket
-      from events
-      where project_id = ${projectId}
-    )
-    select
-      to_char(buckets.bucket at time zone 'utc', 'YYYY-MM-DD"T"HH24') as bucket,
-      count(matching_events.bucket)::int as count
-    from buckets
-    left join matching_events on matching_events.bucket = buckets.bucket
-    group by buckets.bucket
-    order by buckets.bucket
+  // SQLite doesn't have generate_series for dates easily.
+  // We'll fetch the events in the last 24 hours and bucket them in JS for simplicity,
+  // or use a more complex SQLite recursive CTE.
+  const rows = await db.all(sql`
+    WITH RECURSIVE
+      cnt(x) AS (
+         SELECT 0
+         UNION ALL
+         SELECT x + 1 FROM cnt
+         LIMIT 24
+      ),
+      buckets AS (
+        SELECT strftime('%Y-%m-%dT%H', 'now', '-' || (23 - x) || ' hours') as bucket
+        FROM cnt
+      ),
+      matching_events AS (
+        SELECT strftime('%Y-%m-%dT%H', created_at / 1000, 'unixepoch') as bucket
+        FROM events
+        WHERE project_id = ${projectId}
+          AND created_at >= (strftime('%s', 'now', '-23 hours') * 1000)
+      )
+    SELECT
+      buckets.bucket,
+      COALESCE(COUNT(matching_events.bucket), 0) as count
+    FROM buckets
+    LEFT JOIN matching_events ON matching_events.bucket = buckets.bucket
+    GROUP BY buckets.bucket
+    ORDER BY buckets.bucket
   `);
 
   return (rows as unknown as { bucket: string; count: number }[]).map((row) => ({
@@ -247,7 +255,7 @@ export async function getProjectChannels(projectId: string, userId: string): Pro
   const rows = await db
     .select({
       channel: events.channel,
-      count: sql<number>`count(*)::int`,
+      count: sql<number>`CAST(count(*) AS INTEGER)`,
     })
     .from(events)
     .where(eq(events.projectId, projectId))

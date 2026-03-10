@@ -1,16 +1,15 @@
-import "server-only";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-
-// Lazily initialized — avoids throwing at build time when DATABASE_URL is absent
 let _db: ReturnType<typeof drizzle> | undefined;
 
 function getDb() {
   if (!_db) {
-    const url = process.env.DATABASE_URL;
-    if (!url) throw new Error("DATABASE_URL environment variable is not set.");
-    _db = drizzle(postgres(url, { prepare: false }));
+    const url = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+    if (!url) throw new Error("TURSO_DATABASE_URL environment variable is not set.");
+    const client = createClient({ url, authToken });
+    _db = drizzle(client);
   }
   return _db;
 }

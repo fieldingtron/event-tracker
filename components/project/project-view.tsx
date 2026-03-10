@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { ActivityChart } from "@/components/dashboard/activity-chart";
 import { logout } from "@/app/login/actions";
-import { createBrowserClient } from "@/lib/supabase/browser";
 import type { ActivityBucket, ChannelCount, DashboardEvent } from "@/lib/types";
 import styles from "./project-view.module.css";
 
@@ -73,73 +72,9 @@ export function ProjectView({
   const [newEventIds, setNewEventIds] = useState<Set<string>>(new Set());
   const projectColor = getProjectColor(projectName);
 
-  // Realtime subscription
-  useEffect(() => {
-    let client: ReturnType<typeof createBrowserClient>;
-    try {
-      client = createBrowserClient();
-    } catch {
-      return;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const subscription = (client.channel(`project-${projectId}`) as any)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "events",
-          filter: `project_id=eq.${projectId}`,
-        },
-        (payload: { new: Record<string, unknown> }) => {
-          const newEvent: DashboardEvent = {
-            id: payload.new.id as string,
-            projectId: payload.new.project_id as string,
-            channel: payload.new.channel as string,
-            title: payload.new.title as string,
-            description: (payload.new.description as string | null) ?? null,
-            icon: (payload.new.icon as string | null) ?? null,
-            tags: (payload.new.tags as string[]) ?? [],
-            createdAt: (payload.new.created_at as string) ?? new Date().toISOString(),
-          };
-
-          setEvents((prev) => [newEvent, ...prev].slice(0, 100));
-
-          // Track for highlighting
-          setNewEventIds((prev) => {
-            const next = new Set(prev);
-            next.add(newEvent.id);
-            return next;
-          });
-
-          // Update channel counts
-          setChannels((prev) => {
-            const existing = prev.find((c) => c.channel === newEvent.channel);
-            if (existing) {
-              return prev.map((c) =>
-                c.channel === newEvent.channel ? { ...c, count: c.count + 1 } : c,
-              );
-            }
-            return [...prev, { channel: newEvent.channel, count: 1 }];
-          });
-
-          // Remove highlight after 5s
-          setTimeout(() => {
-            setNewEventIds((prev) => {
-              const next = new Set(prev);
-              next.delete(newEvent.id);
-              return next;
-            });
-          }, 5000);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      client.removeChannel(subscription);
-    };
-  }, [projectId]);
+  // Realtime subscription removed as per migration plan.
+  // Turso/SQLite doesn't have a drop-in Supabase Realtime replacement.
+  // Polling could be added here if needed.
 
   const filteredEvents =
     activeChannel === "all"
